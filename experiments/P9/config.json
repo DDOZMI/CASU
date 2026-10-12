@@ -1,0 +1,43 @@
+{
+  "seed": 20261001,
+  "paths": {
+    "rag01_msmarco_corpus": "/home/gomgom/projects/Research/rag_01/data/raw/beir/msmarco/corpus/corpus-00000-of-00001.parquet",
+    "raw": "data/raw",
+    "p4_processed": "data/processed/P4",
+    "p4_emb": "data/emb/P4",
+    "p4_config": "experiments/P4/config.json",
+    "p6_processed": "data/processed/P6",
+    "p6_emb": "data/emb/P6",
+    "p7_results": "experiments/P7/results",
+    "processed": "data/processed/P9",
+    "emb": "data/emb/P9",
+    "results": "experiments/P9/results",
+    "models": "/home/gomgom/projects/LLM"
+  },
+  "msmarco": {
+    "local": "beir/msmarco/corpus/corpus-00000-of-00001.parquet",
+    "revision": "a918e0d11a77ed33f42f29d98340b655593b96ad",
+    "expected_size": 1632573546,
+    "_source": "BeIR/msmarco @a918e0d (rag_01 MANIFEST); copied with sha256, no download",
+    "expected_sha256": "57d6fc19851d4a363fff8b3e9acb0b549d97d4b141bd2aedd1522149dfeb8bd6"
+  },
+  "pool_size": 50000,
+  "doc_k": 10,
+  "neglabel": {
+    "M": 10000,
+    "eta": 0.05,
+    "n_groups": 100,
+    "tau_grid": [
+      0.005,
+      0.01,
+      0.02,
+      0.05,
+      0.1,
+      0.2
+    ],
+    "_source": "NegLabel (Jiang et al., ICLR 2024): eta = 0.05, M = 10,000, n_g = 100 groups, sum-softmax score. Our choices (D1-D3, user-approved 2026-10-04 'NegLabel부터 해보자'): candidates = 50k MS MARCO passages (pool); ID label = known-source doc logit (top-10 mean, P6/P7); negative label = one passage (retriever native score); distance d_i = 5th percentile over known sources of -l_s(candidate); tau = P7 doc-only MSP tau of the (retriever, held-out source), grid reported; groups = seeded shuffle of the mined negatives; review: mining uses cosine (paper; matters only for contriever, whose raw dot product would favour low-norm passages), scores keep the retriever's native similarity"
+  },
+  "analysis": {
+    "source_bootstrap": 1000
+  }
+}

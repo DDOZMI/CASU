@@ -1,0 +1,48 @@
+{
+  "seed": 20261001,
+  "paths": {
+    "raw": "data/raw",
+    "p2_processed": "data/processed/P2",
+    "p2_emb": "data/emb/P2",
+    "p4_processed": "data/processed/P4",
+    "p4_emb": "data/emb/P4",
+    "p4_config": "experiments/P4/config.json",
+    "p4_results": "experiments/P4/results",
+    "p5_config": "experiments/P5/config.json",
+    "p5_script": "experiments/P5/01_train_eval.py",
+    "p5_results": "experiments/P5/results",
+    "processed": "data/processed/P6",
+    "emb": "data/emb/P6",
+    "results": "experiments/P6/results",
+    "models": "/home/gomgom/projects/LLM"
+  },
+  "cqadupstack": {
+    "repo_pattern": "mteb/cqadupstack-{forum}",
+    "file": "corpus.jsonl",
+    "_revisions_source": "identical to experiments/P4/config.json cqadupstack.revisions (asserted in 01_prepare)"
+  },
+  "beir_sources": ["scifact", "nfcorpus", "fiqa", "arguana", "scidocs"],
+  "nq_corpus": "beir/nq/corpus/corpus-00000-of-00001.parquet",
+  "nq_qrels": "beir/nq-qrels/test.tsv",
+  "bank": {
+    "n": 3000,
+    "n_sensitivity": 1000,
+    "_source": "our choice (D1): equal n for every source because kNN similarities depend on bank size; smallest corpus is NFCorpus (3,633). The n=1000 bank is the first 1,000 of the same seeded permutation (nested)"
+  },
+  "scores": {
+    "k": 10,
+    "k_sensitivity": 1,
+    "tau_grid": [0.01, 0.02, 0.05],
+    "_source": "k=10 our choice (same as P4 KNN k). A3 (doc Energy / MSP) reported over the tau grid only, no primary tau (D2: Qwen3 training temperature not confirmed; A3 is auxiliary)"
+  },
+  "redde": {
+    "ratio_r1": 0.0005,
+    "ratio_r2": 0.003,
+    "backoff_threshold": 0.1,
+    "_source": "Si & Callan, SIGIR 2003, modified ReDDE (Sec. 4, Eq. 11-14): r1 = 0.0005, r2 = 0.003, backoff 0.1. Our adaptations: centralized sample DB = union of the known sources' banks ranked by the retriever's dense score (paper: INQUERY); uniform random samples (paper: query-based sampling); exact corpus sizes (paper: sample-resample estimates). Routing only (ReDDE has no rejection rule)"
+  },
+  "analysis": {
+    "bootstrap": 1000,
+    "source_bootstrap": 1000
+  }
+}

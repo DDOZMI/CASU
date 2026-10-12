@@ -1,0 +1,50 @@
+{
+  "seed": 20261001,
+  "paths": {
+    "rag01_raw": "/home/gomgom/projects/Research/rag_01/data/raw",
+    "raw": "data/raw",
+    "processed": "data/processed/P0",
+    "emb": "data/emb/P0",
+    "results": "experiments/P0/results",
+    "audit": "experiments/P0/audit",
+    "models": "/home/gomgom/projects/LLM"
+  },
+  "copy_from_rag01": [
+    "beir/nq/corpus/corpus-00000-of-00001.parquet",
+    "beir/nq/queries/queries-00000-of-00001.parquet",
+    "beir/nq-qrels/test.tsv",
+    "answers/nq_open/nq_open/train-00000-of-00001.parquet",
+    "answers/nq_open/nq_open/validation-00000-of-00001.parquet"
+  ],
+  "external": {
+    "fiqa": {"repo": "BeIR/fiqa", "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+             "qrels_repo": "BeIR/fiqa-qrels", "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a"},
+    "scifact": {"repo": "BeIR/scifact", "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+                "qrels_repo": "BeIR/scifact-qrels", "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029"}
+  },
+  "bank_size": 20000,
+  "fit_fraction": 0.5,
+  "retrievers": {
+    "contriever": {"path": "facebook/contriever", "pooling": "mean", "normalize": false, "tau": 0.05,
+                   "max_len": 512, "max_tokens_per_batch": 131072},
+    "contriever-msmarco": {"path": "facebook/contriever-msmarco", "pooling": "mean", "normalize": false, "tau": 0.05,
+                           "max_len": 512, "max_tokens_per_batch": 131072},
+    "bge-m3": {"path": "BAAI/bge-m3", "pooling": "cls", "normalize": true, "tau": 0.02,
+               "max_len": 512, "max_tokens_per_batch": 65536}
+  },
+  "benchmark_sample": 10000,
+  "top_n": 1000,
+  "deep_n": 3000,
+  "scores": {
+    "k_gap": 10, "k_nqc": 100, "k_wig": 10,
+    "m_local": 10, "m_sweep": [5, 10, 20],
+    "tau_sweep": [0.01, 0.02, 0.05, 0.1],
+    "n_sweep": [100, 1000],
+    "knn_k": 10,
+    "corpus_sample": 200000,
+    "vim_dim_rule": {"threshold_feature_dim": 1500, "dim_above": 1000, "dim_otherwise": 512},
+    "head_batch_queries": 16
+  },
+  "audit": {"n_per_stratum": 50, "top_per_retriever": 5},
+  "analysis": {"bootstrap": 1000}
+}

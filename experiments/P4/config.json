@@ -1,0 +1,92 @@
+{
+  "seed": 20261001,
+  "paths": {
+    "raw": "data/raw",
+    "p0_processed": "data/processed/P0",
+    "p2_processed": "data/processed/P2",
+    "processed": "data/processed/P4",
+    "emb": "data/emb/P4",
+    "results": "experiments/P4/results",
+    "models": "/home/gomgom/projects/LLM"
+  },
+  "cqadupstack": {
+    "repo_pattern": "mteb/cqadupstack-{forum}",
+    "revisions": {
+      "android": "e03f271e3f4a75f49787c838a62f671b35bc9004",
+      "english": "fa6afc4ce926dafd42b7b7c0a19ae40c4632d895",
+      "gaming": "1c9769860b1d666aae049c6ba60d76ecb244253e",
+      "gis": "080d0534a7c9fa7b856e77b752c042a6ddbd9714",
+      "mathematica": "fc1af0b6c82dfd3a2aabfb4d9606ba7226268f05",
+      "physics": "9c2faaa08d173bccf24e1cc3fc1e39bf3caea961",
+      "programmers": "339629ee116f204b54b1cfd50b9084199a6d415c",
+      "stats": "6b474f6f6dca1fe17f197f04500b537417692250",
+      "tex": "2b6f1e278efc77f54ab343b200f5fc7fcd2fc934",
+      "unix": "3197b09145642430d9db451fcdc1e1987e54d74c",
+      "webmasters": "c691d4af16c19a79df7ee93bfbd12cc186a5bc92",
+      "wordpress": "6117bc4829afb46d0af6ad6106d1f942e1048281"
+    },
+    "files": [
+      "queries.jsonl",
+      "qrels/test.tsv"
+    ]
+  },
+  "beir_sources": [
+    "scifact",
+    "nfcorpus",
+    "fiqa",
+    "arguana",
+    "scidocs"
+  ],
+  "nq_source": true,
+  "fit_fraction": 0.5,
+  "retrievers": {
+    "contriever-msmarco": {
+      "path": "facebook/contriever-msmarco",
+      "pooling": "mean",
+      "normalize": false,
+      "dtype": "float32",
+      "max_len": 512,
+      "max_tokens_per_batch": 131072,
+      "query_prefix": ""
+    },
+    "bge-m3": {
+      "path": "BAAI/bge-m3",
+      "pooling": "cls",
+      "normalize": true,
+      "dtype": "float16",
+      "max_len": 512,
+      "max_tokens_per_batch": 131072,
+      "query_prefix": ""
+    },
+    "qwen3-emb-0.6b": {
+      "path": "Qwen/Qwen3-Embedding-0.6B",
+      "pooling": "last",
+      "normalize": true,
+      "dtype": "bfloat16",
+      "max_len": 512,
+      "max_tokens_per_batch": 131072,
+      "query_prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery:"
+    }
+  },
+  "_retrievers_source": "identical to experiments/P2/config.json retrievers",
+  "scores": {
+    "logreg_C_grid": [
+      0.01,
+      0.1,
+      1.0
+    ],
+    "logreg_C_primary": 1.0,
+    "logreg_max_iter": 2000,
+    "knn_k": 10,
+    "vim_dim_rule": {
+      "threshold_feature_dim": 1500,
+      "dim_above": 1000,
+      "dim_otherwise": 512
+    },
+    "pca_residual_energy": 0.9
+  },
+  "analysis": {
+    "bootstrap": 1000,
+    "source_bootstrap": 1000
+  }
+}

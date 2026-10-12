@@ -1,0 +1,39 @@
+{
+  "seed": 20261001,
+  "paths": {
+    "rag01_raw": "/home/gomgom/projects/Research/rag_01/data/raw",
+    "raw": "data/raw",
+    "processed": "data/processed/P2",
+    "emb": "data/emb/P2",
+    "results": "experiments/P2/results",
+    "models": "/home/gomgom/projects/LLM"
+  },
+  "datasets": {
+    "scifact":  {"repo": "BeIR/scifact",  "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+                 "qrels_repo": "BeIR/scifact-qrels",  "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029"},
+    "nfcorpus": {"repo": "BeIR/nfcorpus", "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+                 "qrels_repo": "BeIR/nfcorpus-qrels", "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65"},
+    "fiqa":     {"repo": "BeIR/fiqa",     "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+                 "qrels_repo": "BeIR/fiqa-qrels",     "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a"},
+    "arguana":  {"repo": "BeIR/arguana",  "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+                 "qrels_repo": "BeIR/arguana-qrels",  "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7"},
+    "scidocs":  {"repo": "BeIR/scidocs",  "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+                 "qrels_repo": "BeIR/scidocs-qrels",  "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc"}
+  },
+  "msmarco_copy_from_rag01": ["beir/msmarco/queries/queries-00000-of-00001.parquet", "beir/msmarco-qrels/train.tsv"],
+  "bank_size": 20000,
+  "retrievers": {
+    "contriever-msmarco": {"path": "facebook/contriever-msmarco", "pooling": "mean", "normalize": false,
+                           "dtype": "float32", "max_len": 512, "max_tokens_per_batch": 131072, "query_prefix": ""},
+    "bge-m3": {"path": "BAAI/bge-m3", "pooling": "cls", "normalize": true,
+               "dtype": "float16", "max_len": 512, "max_tokens_per_batch": 131072, "query_prefix": ""},
+    "qwen3-emb-0.6b": {"path": "Qwen/Qwen3-Embedding-0.6B", "pooling": "last", "normalize": true,
+                       "dtype": "bfloat16", "max_len": 512, "max_tokens_per_batch": 131072,
+                       "query_prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery:"}
+  },
+  "published_ndcg10": {"contriever-msmarco": {"scifact": 0.677, "nfcorpus": 0.328, "fiqa": 0.329, "arguana": 0.446, "scidocs": 0.165},
+                       "_source": "Contriever paper (TMLR 2022) Table 2, column 'Ours' (contriever-msmarco)"},
+  "methods": {"react_p": 90, "react_p_sweep": [90, 95, 99], "abtt_k_rule": "round(d/100)", "abtt_k_sweep": ["1", "d/100", "d/50"],
+              "pca_query_dim_rule": "d/2", "whiten_eig_floor_rel": 1e-6},
+  "analysis": {"bootstrap": 1000, "k": 10}
+}
