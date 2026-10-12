@@ -1,0 +1,90 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "a0_processed": "data/processed/A0",
+    "a0_emb": "data/emb/A0",
+    "p9_emb": "data/emb/P9",
+    "results": "experiments/A7/results"
+  },
+  "runs": {
+    "main_bge-m3": {
+      "retriever": "bge-m3",
+      "emb": "data/emb/A1/bge-m3",
+      "a2": "experiments/A2/results"
+    },
+    "a5_bge-m3": {
+      "retriever": "bge-m3",
+      "emb": "data/emb/A5/bge-m3",
+      "a2": "experiments/A5/results_a2/bge-m3"
+    },
+    "a5_contriever-msmarco": {
+      "retriever": "contriever-msmarco",
+      "emb": "data/emb/A5/contriever-msmarco",
+      "a2": "experiments/A5/results_a2/contriever-msmarco"
+    },
+    "a5_qwen3-emb-0.6b": {
+      "retriever": "qwen3-emb-0.6b",
+      "emb": "data/emb/A5/qwen3-emb-0.6b",
+      "a2": "experiments/A5/results_a2/qwen3-emb-0.6b"
+    }
+  },
+  "primary_run": "main_bge-m3",
+  "m": 4,
+  "k": 10,
+  "taus": [
+    "0.01",
+    "inf"
+  ],
+  "dprime_clip": 0.0001,
+  "target": {
+    "main": "ddp",
+    "secondary": [
+      "dA"
+    ],
+    "_source": "plan rev3 A7: KB-level mean of the A2 curated (site partition, m = 4) gain over the KB's cells (O) and draws; d' vs abs (main), dAUROC (secondary; added after the RQ1 scale finding, JOURNAL 2026-10-06). Both A3 taus (0.01, inf). Test queries only. G (plan secondary) is not used: G is undefined or unstable near the ceiling (analysis rev3 sec.5); dA replaces it"
+  },
+  "predictors": {
+    "theory": "pi_var * d_hat",
+    "components": [
+      "pi_var",
+      "rho",
+      "d_hat"
+    ],
+    "simple": [
+      "log_n",
+      "sd_kb",
+      "mu_kb",
+      "gen",
+      "crowd"
+    ],
+    "m1": [
+      "pi_var",
+      "d_hat",
+      "crowd"
+    ],
+    "m2": [
+      "pi_var",
+      "rho",
+      "d_hat",
+      "log_n",
+      "sd_kb",
+      "mu_kb",
+      "gen",
+      "crowd"
+    ],
+    "_source": "analysis rev3 RQ5 list (cross-corpus score correlation = core; KB internal spread; ID-general-corpus similarity; site question count; query-doc gap), ID calibration queries (500 per KB) only, no OOD query. Defined (our choices, fixed before the run; the form is post hoc informed by A5 05_offdiag): pi_var = mean over the KB's A2 m = 4 site sets of 1/sqrt(1 + r^2 - 2 rho r) - 1, r = SD_cal(c)/SD_cal(s_KB), rho = corr_cal(s_KB, c), c = comparison term at tau (noise-cancellation factor of the moment identity, ID-only); rho = its mean; d_hat = mean_cal(s_KB - mean over the other banks of s_j) / SD_cal(s_KB) (ID-only separation proxy); theory = pi_var * d_hat (the T_var term with d_abs replaced by d_hat; parameter-free). Simple: log_n = log questions kept for the site (A0); sd_kb, mu_kb = SD / mean of s_KB on calibration queries (spread; query-bank similarity level = query-doc gap proxy); gen = mean top-10 cosine of calibration queries to the MS MARCO 50k pool (P9, same retriever); crowd = mean over calibration queries of the maximum over other banks of s_j (KB-near comparison cost proxy). Comparison sets are the KB's A2 sets (known at deployment; they exclude O by construction)"
+  },
+  "models": {
+    "_source": "our choices, fixed before the run: M0 = theory predictor, no fitting; M1 = leave-one-KB-out OLS on standardised [pi_var, d_hat, crowd] (theory components + cost proxy); M2 = LOKO OLS on all 8 (exploratory); baselines = LOKO OLS on each simple predictor alone (sign learned in the training fold). Standardisation inside each training fold"
+  },
+  "judgment": "analysis rev3 RQ5 + completion (fixed before the run): statistic = Spearman across KBs between the (LOKO) prediction and the observed KB-level gain; a model beats the simple baselines if the KB-bootstrap 95% interval of Spearman(model) - max over simple baselines of Spearman(baseline) (max taken within each replicate) lies above 0. Read on the primary run (86 KBs); the 30-KB subset runs are descriptive. Failure to beat the baselines = refutation for RQ5 (exploratory RQ)",
+  "bootstrap_B": 2000,
+  "other_banks": {
+    "min_strict": 10,
+    "_source": "review 2026-10-06 (major 2): crowd and d_hat must not use the KB's out-of-scope sites' banks (A2 excludes O from comparison sets). Main run: strict = banks that are no O of this KB (73 of 85); subset runs (every other site is an O of the KB): per cell exclude that cell's O and average over cells (still uses other cells' O banks; descriptive runs only). pi_var uses the A2 sets, which exclude O"
+  },
+  "primary": {
+    "model": "M0 theory",
+    "_source": "review 2026-10-06 (major 4), fixed before the run, our choice: the parameter-free theory predictor on the main target (d') is the test of record, each tau read separately (as A3: no single sign when the taus disagree); M1 / M2 and dA are secondary"
+  }
+}

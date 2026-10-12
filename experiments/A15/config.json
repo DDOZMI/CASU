@@ -1,0 +1,119 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "raw": "data/raw",
+    "a0_emb": "data/emb/A0",
+    "a0_processed": "data/processed/A0",
+    "p0_processed": "data/processed/P0",
+    "p2_processed": "data/processed/P2",
+    "p4_config": "experiments/P4/config.json",
+    "p9_emb": "data/emb/P9",
+    "msmarco_corpus": "data/raw/beir/msmarco/corpus/corpus-00000-of-00001.parquet",
+    "models": "/home/gomgom/projects/LLM",
+    "emb": "data/emb/A15",
+    "processed": "data/processed/A15",
+    "a13_results": "experiments/A13/results",
+    "a14_results": "experiments/A14/results",
+    "results": "experiments/A15/results",
+    "p9_processed": "data/processed/P9"
+  },
+  "download": {
+    "dbpedia": {
+      "repo": "DeveloperOats/DBPedia_Classes",
+      "revision": "4d0aa96069f24063697e4df63b95be78d3f7fb7d",
+      "files": [
+        "DBPEDIA_train.csv",
+        "DBPEDIA_val.csv",
+        "DBPEDIA_test.csv"
+      ],
+      "local": "dbpedia_classes",
+      "license": "cc0-1.0"
+    },
+    "yahoo": {
+      "repo": "community-datasets/yahoo_answers_topics",
+      "revision": "6652a1e7c94f7260a0bfd0c9092dd48e2d536ea1",
+      "files": [
+        "yahoo_answers_topics/test-00000-of-00001.parquet",
+        "yahoo_answers_topics/train-00000-of-00002.parquet",
+        "yahoo_answers_topics/train-00001-of-00002.parquet"
+      ],
+      "local": "yahoo_answers_topics",
+      "license": "not stated (research use only)"
+    },
+    "_source": "user approval 2026-10-07 21:22 ('그렇게 진행해'): DBpedia hierarchical classes (Wikipedia abstracts, l1/l2/l3) for the Wikipedia topic bank; Yahoo Answers Topics test split (10 topics) for non-SE out-of-scope queries. Revisions pinned (HF API 2026-10-07)",
+    "_source_yahoo_train": "user 2026-10-07 ('Yahoo도 해보도록 해'): train split for the symmetric Yahoo topic bank"
+  },
+  "prepare": {
+    "group_size": 3000,
+    "ms_pool": 252000,
+    "n_ood": 1000,
+    "_source": "our choice (JOURNAL 21:22, user approved): wiki groups = l2 classes chunked by 3,000 (l3-ordered); 252,000 MS passages = 84 x 3,000 = the largest main SE bank; 1,000 queries per out-of-scope source (= SE test size)"
+  },
+  "encode": {
+    "wiki": {
+      "bge-m3": "all",
+      "contriever-msmarco": "all",
+      "qwen3-emb-0.6b": "all"
+    },
+    "ms": {
+      "bge-m3": 252000,
+      "contriever-msmarco": 90000,
+      "qwen3-emb-0.6b": 90000
+    },
+    "se_test_second": {
+      "contriever-msmarco": "all86"
+    },
+    "_source": "P4/A0 retriever settings (queries with the query prefix, documents none). MS: bge-m3 for the main run (up to 84 chunks), the other models only the A5 size (30 chunks). Wiki: all groups for all models (also the second-encoder centroids). se_test_second: contriever embeddings of all 86 sites' test queries (second encoder of the main bge-m3 run for O-query centroids; A0 has contriever test queries only for the subset)"
+  },
+  "k": 10,
+  "runs": {
+    "main_bge-m3": {
+      "retriever": "bge-m3",
+      "emb": "data/emb/A1/bge-m3",
+      "a1": "experiments/A1/results",
+      "ms_chunks": 84,
+      "second": "contriever-msmarco"
+    },
+    "a5_bge-m3": {
+      "retriever": "bge-m3",
+      "emb": "data/emb/A5/bge-m3",
+      "a1": "experiments/A5/results/bge-m3",
+      "ms_chunks": 30,
+      "second": "contriever-msmarco"
+    },
+    "a5_contriever-msmarco": {
+      "retriever": "contriever-msmarco",
+      "emb": "data/emb/A5/contriever-msmarco",
+      "a1": "experiments/A5/results/contriever-msmarco",
+      "ms_chunks": 30,
+      "second": "qwen3-emb-0.6b"
+    },
+    "a5_qwen3-emb-0.6b": {
+      "retriever": "qwen3-emb-0.6b",
+      "emb": "data/emb/A5/qwen3-emb-0.6b",
+      "a1": "experiments/A5/results/qwen3-emb-0.6b",
+      "ms_chunks": 30,
+      "second": "bge-m3"
+    }
+  },
+  "_runs_source": "second = the A1 second-distance encoder (bge-m3 -> contriever, contriever -> Qwen3, Qwen3 -> bge-m3), used only for the topic moderator and the non-SE tiers (centroid cosines)",
+  "eval": {
+    "R": 3,
+    "R_ref": 5,
+    "exclusion_quantile": 0.9,
+    "taus": [
+      "0.01",
+      "inf"
+    ],
+    "alpha": 0.5,
+    "op_accept": 0.95,
+    "ceiling": 0.98,
+    "bootstrap_B": 2000,
+    "_source": "our choices (JOURNAL 21:22 plan approved by the user; the matched-size rule below, the ms_n arm and the per-source thresholds are our choices, not in the plan: review 2026-10-07). Per KB the matched size n = min(|SE eligible| - 1, |wiki eligible|, ms_chunks) groups of 3,000, the same n for every O of the KB (SE eligible = sites other than the KB not excluded by the A14 site-crowd rule; for an SE O the O site is also removed; wiki eligible = wiki groups not excluded by the same rule with a wiki-specific common threshold, the 0.9 quantile of crowd(KB, group) over all KB x group; MS chunks are random and not filtered). Matched banks per draw d (R = 3): se_n (seed A15_se, KB, O, d: O-dependent because O is removed), wiki_n and ms_n (seeds A15_wiki_set / A15_ms_set, KB, d: shared by all O of the KB, so the bank-source contrast is paired across O sources). Full banks (deterministic): se_full = all SE eligible (= A14 excl all for SE O), wiki_full = all wiki eligible, ms_full = the first |SE eligible| chunks (the user's size-matched MS line; capped by the pool). Reference: flats_ms@0.5 on the 12,000-document P9 sample with the A2 seed (KB, O, d), d < 5 (= A13 for SE O; checked). Tiers: SE O = A1 tag tiers; non-SE O = tertiles over the run's (KB, non-SE O) pairs of the second-encoder cosine between the KB bank centroid and the O query centroid (high = near). Matched n also respects the Yahoo bank: n <= |Yahoo eligible| - the largest one-topic group count. se_n: one draw of n+1 sites per (KB, d), O dropped if present else the last (review 2026-10-07)"
+  },
+  "yahoo_bank": {
+    "chunks_per_topic": 10,
+    "group_size": 3000,
+    "_source": "our choice (user asked for the Yahoo bank 2026-10-07): per Yahoo topic, 30,000 train questions (non-empty title; de-duplicated; titles equal to any Yahoo out-of-scope test title removed), seeded, document = question title + question content (the SE document form: title + body), 10 chunks of 3,000 per topic = 100 groups 'yahoo:<topic>#j'. For a Yahoo out-of-scope topic, the groups of that topic are removed from the Yahoo bank (as O's site is removed from the SE bank). KB-adjacency filter with a Yahoo-specific common 0.9-quantile threshold"
+  }
+}

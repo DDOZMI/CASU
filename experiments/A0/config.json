@@ -1,0 +1,69 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "se_raw": "data/raw/stackexchange",
+    "processed": "data/processed/A0",
+    "emb": "data/emb/A0",
+    "models": "/home/gomgom/projects/LLM",
+    "p4_config": "experiments/P4/config.json",
+    "results": "experiments/A0/results"
+  },
+  "split": {
+    "n_test": 1000,
+    "n_cal": 500,
+    "n_bank": 3000,
+    "n_l3": 3000,
+    "_source": "plan rev3 sec.1 (D5 bank 3,000; cal 500; test 1,000; L3 3,000 for A4). Questions deduplicated by normalised title within a site before the split (our choice: exact-duplicate titles would put a query's own text in the bank)"
+  },
+  "tags": {
+    "sample_n": 20000,
+    "q_neighbor": 0.1,
+    "q_far": 0.5,
+    "_source": "D7; levels fixed 2026-10-06 before P19 step 0 (P19 config). Sample = questions not drawn as queries (test/cal), fixed seed"
+  },
+  "category_alias": {
+    "writers.stackexchange.com": "professional",
+    "_source": "dump name writers = page name writing.stackexchange.com (MANIFEST A0)"
+  },
+  "subset": {
+    "group_quota": {
+      "technology": 4,
+      "culturerecreation": 2,
+      "lifearts": 2,
+      "science": 2
+    },
+    "group_size": 3,
+    "_source": "plan rev3 sec.1, our choice: ~30 sites as 10 tag-nearest triples, category-balanced; professional (3) and business (1) excluded (too few sites). Rule fixed before any A-series result"
+  },
+  "encode": {
+    "main": {
+      "bge-m3": [
+        "test",
+        "cal",
+        "bank",
+        "l3"
+      ],
+      "contriever-msmarco": [
+        "bank"
+      ]
+    },
+    "subset": {
+      "contriever-msmarco": [
+        "test",
+        "cal",
+        "l3"
+      ],
+      "qwen3-emb-0.6b": [
+        "test",
+        "cal",
+        "bank",
+        "l3"
+      ]
+    },
+    "_source": "plan rev3 sec.1: bge-m3 all 87 sites; contriever banks of all 87 (2nd-priority distance, cross-embedding clusters); subset roles for A5. Retriever settings (pooling, dtype, max_len, query prefix) from the P4 config; queries (test, cal) get the query prefix, documents none"
+  },
+  "exclude_sites": [
+    "rus.stackexchange.com"
+  ],
+  "_exclude_source": "user decision 2026-10-06 (A1 pre-run review): rus is ~80% Russian text (non-ASCII share of titles 0.83, bank 0.79); it breaks the same-platform same-format premise (analysis sec.4) and acts as an inert bank for English queries. Excluded from every role; 86 sites remain"
+}

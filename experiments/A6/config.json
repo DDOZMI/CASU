@@ -1,0 +1,189 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "li_raw": "data/raw/li_bridge",
+    "msmarco_corpus": "/home/gomgom/projects/Research/rag_01/data/raw/beir/msmarco/corpus/corpus-00000-of-00001.parquet",
+    "models": "/home/gomgom/projects/LLM",
+    "processed": "data/processed/A6",
+    "emb": "data/emb/A6",
+    "results": "experiments/A6/results"
+  },
+  "retrievers": {
+    "contriever": {
+      "path": "facebook/contriever",
+      "pooling": "mean",
+      "normalize": false,
+      "dtype": "float32",
+      "max_len": 512,
+      "max_tokens_per_batch": 131072,
+      "query_prefix": ""
+    },
+    "contriever-msmarco": {
+      "path": "facebook/contriever-msmarco",
+      "pooling": "mean",
+      "normalize": false,
+      "dtype": "float32",
+      "max_len": 512,
+      "max_tokens_per_batch": 131072,
+      "query_prefix": ""
+    },
+    "_source": "plan rev3 A6: Li et al. 2024 use Contriever (version not stated; 'developed by Facebook'), FAISS inner product (MIPS) -> facebook/contriever main, contriever-msmarco sensitivity; settings as the P4 contriever-msmarco entry"
+  },
+  "corpora": {
+    "kb": "textbooks",
+    "comparison": [
+      "pubmed",
+      "wikipedia",
+      "msmarco"
+    ],
+    "size": 90692,
+    "_source": "plan rev3 sec.1: KB = MedRAG Textbooks (all 125,847); comparison corpora PubMed (6 shards, 90,692), Wikipedia (3 shards, 111,734 -> seeded random 90,692), MS MARCO (seeded random 90,692 passages of the rag_01 BEIR corpus; general corpus with a different style). Document text: MedRAG corpora use the records' own `contents` field ('title. content', MedRAG's convention; review 2026-10-06), MS MARCO title + ' ' + text (Li do not state their text construction)"
+  },
+  "queries": {
+    "id": "medqa",
+    "ood": [
+      "mmlu",
+      "medmcqa",
+      "pubmedqa",
+      "bioasq",
+      "truthfulqa",
+      "wikiqa",
+      "commonsenseqa"
+    ],
+    "text": "question",
+    "text_sensitivity": "question_options",
+    "_source": "Li sec.4.1: MedQA-US (1,273) is the IK set of Textbooks; OoK = the 7 other datasets (TruthfulQA without the Health category = 762; WikiQA unique questions = 3,047; CommonsenseQA all splits = 12,102 here vs 12,247 in Li). Query text = question only (our choice; Li do not state it); question + options (MIRAGE datasets) as a reproduction sensitivity. queries whose source document is in a comparison corpus are excluded from the relative analysis (B/C), symmetrically (review 2026-10-06): PubMedQA / BioASQ gold PMIDs in the PubMed shards, WikiQA document_title and TruthfulQA Wikipedia source page in the Wikipedia subset (exact title match)"
+  },
+  "reproduction": {
+    "k": 32,
+    "energy_tau": 1.0,
+    "n_per_side": 300,
+    "runs": 10,
+    "stats": [
+      "MSS",
+      "KNN",
+      "AvgKNN",
+      "Entropy",
+      "Energy"
+    ],
+    "li_table1a": {
+      "mmlu": {
+        "MSS": 0.8544,
+        "KNN": 0.8563,
+        "AvgKNN": 0.8594,
+        "Entropy": 0.7884,
+        "Energy": 0.8595
+      },
+      "medmcqa": {
+        "MSS": 0.9456,
+        "KNN": 0.943,
+        "AvgKNN": 0.9488,
+        "Entropy": 0.8737,
+        "Energy": 0.949
+      },
+      "pubmedqa": {
+        "MSS": 0.9616,
+        "KNN": 0.9451,
+        "AvgKNN": 0.9563,
+        "Entropy": 0.9251,
+        "Energy": 0.9566
+      },
+      "bioasq": {
+        "MSS": 0.968,
+        "KNN": 0.97,
+        "AvgKNN": 0.9739,
+        "Entropy": 0.8964,
+        "Energy": 0.974
+      },
+      "truthfulqa": {
+        "MSS": 0.9998,
+        "KNN": 0.9999,
+        "AvgKNN": 0.9999,
+        "Entropy": 0.9647,
+        "Energy": 0.9999
+      },
+      "wikiqa": {
+        "MSS": 0.9981,
+        "KNN": 0.9986,
+        "AvgKNN": 0.9986,
+        "Entropy": 0.9636,
+        "Energy": 0.9986
+      },
+      "commonsenseqa": {
+        "MSS": 0.9999,
+        "KNN": 0.9999,
+        "AvgKNN": 0.9999,
+        "Entropy": 0.971,
+        "Energy": 0.9999
+      }
+    },
+    "_source": "Li et al. EMNLP 2024 sec.3.2 and sec.4.2 [원문 확인 2026-10-06]: test statistics MSS (-max sim), KNN (-k-th sim), AvgKNN (-mean top-k), Entropy (entropy of softmax over the top-k sims), Energy (-tau log sum_topk exp(s/tau), tau = 1); inner product; k = 32; 300 IK vs 300 OoK drawn at random, mean AUROC over 10 runs; Table 1(a) Textbooks values transcribed. Fisher / Simes omitted (their IK reference set for the eCDF is not specified)"
+  },
+  "relative": {
+    "k": 10,
+    "similarity": "cosine",
+    "tau_grid": [
+      0.005,
+      0.01,
+      0.02,
+      0.05,
+      0.1,
+      "inf"
+    ],
+    "alpha_grid": [
+      0.1,
+      0.2,
+      0.5,
+      1,
+      2
+    ],
+    "sets": {
+      "P": [
+        "pubmed"
+      ],
+      "W": [
+        "wikipedia"
+      ],
+      "PW": [
+        "pubmed",
+        "wikipedia"
+      ],
+      "M": [
+        "msmarco"
+      ],
+      "MP": [
+        "msmarco",
+        "pubmed"
+      ],
+      "MW": [
+        "msmarco",
+        "wikipedia"
+      ]
+    },
+    "neighbour": {
+      "pubmedqa": "pubmed",
+      "bioasq": "pubmed",
+      "truthfulqa": "wikipedia",
+      "wikiqa": "wikipedia",
+      "commonsenseqa": "wikipedia",
+      "mmlu": null,
+      "medmcqa": null
+    },
+    "id_split": "MedQA split once (seeded) into calibration and test halves; test half = ID negatives; calibration half = operating-point threshold (95% ID acceptance)",
+    "bootstrap_B": 2000,
+    "dprime_clip": 0.0001,
+    "_source": "plan rev3 A6 items 2-3 with our main protocol (cosine top-10 mean, S_tau grid, pooled mix) for comparability with A1-A5; also the Li-native pooled ratio on inner-product AvgKNN (k = 32): mixIP@a = AvgKNN_KB - a * AvgKNN_pool. RQ3 analogue: replacement design {MS MARCO + PubMed} vs {MS MARCO + Wikipedia} per OOD dataset; neighbour corpus per plan (research-type -> PubMed, general -> Wikipedia, exam-type -> none, control); the ID side is identical across OOD datasets for a given set, so the difference-in-differences across OOD types isolates the OOD-side neighbour effect. Query-level bootstrap (ID and OOD resampled independently, paired across scores)",
+    "rq3_designs": {
+      "C1": [
+        "MP",
+        "MW"
+      ],
+      "C2": [
+        "P",
+        "W"
+      ],
+      "_source": "C1 replacement with MS MARCO as the shared member (plan); C2 direct swap without MS MARCO (review 2026-10-06: MS MARCO is itself a neighbour of web/Bing-style general datasets such as WikiQA). Both size-matched within the pair"
+    },
+    "did_rule": "fixed before the run (review 2026-10-06): a dataset enters the DiD only if its absolute AUROC and both arms' AUROC are < 1 - dprime_clip (no clipped cell); contrasts are also reported in AUROC; clipped cells are flagged per dataset. Interpretation caveat: PubMed as neighbour of PubMedQA/BioASQ is also a format/source-style match (PubMedQA questions are rephrased PubMed titles), Wikipedia is not format-matched to the general datasets"
+  }
+}

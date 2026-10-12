@@ -1,0 +1,73 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "a0_emb": "data/emb/A0",
+    "a0_processed": "data/processed/A0",
+    "p2_processed": "data/processed/P2",
+    "p2_emb": "data/emb/P2",
+    "a6_processed": "data/processed/A6",
+    "p4_config": "experiments/P4/config.json",
+    "p9_emb": "data/emb/P9",
+    "models": "/home/gomgom/projects/LLM",
+    "emb": "data/emb/A12",
+    "processed": "data/processed/A12",
+    "results": "experiments/A12/results"
+  },
+  "runs": {
+    "main_bge-m3": {
+      "retriever": "bge-m3",
+      "emb": "data/emb/A1/bge-m3"
+    },
+    "a5_bge-m3": {
+      "retriever": "bge-m3",
+      "emb": "data/emb/A5/bge-m3"
+    },
+    "a5_contriever-msmarco": {
+      "retriever": "contriever-msmarco",
+      "emb": "data/emb/A5/contriever-msmarco"
+    },
+    "a5_qwen3-emb-0.6b": {
+      "retriever": "qwen3-emb-0.6b",
+      "emb": "data/emb/A5/qwen3-emb-0.6b"
+    }
+  },
+  "encode": {
+    "retrievers": [
+      "bge-m3",
+      "contriever-msmarco",
+      "qwen3-emb-0.6b"
+    ],
+    "msq": "P2 bank.parquet (20,000 MS MARCO training queries, deduplicated, evaluation queries removed; P2 01_prepare), encoded as queries (retriever query prefix)",
+    "wiki_pool_n": 50000,
+    "_source": "our choice (user 2026-10-07 approved the recommended plan): MS MARCO query bank = reference for the gen / hub rules (A12) and qz_ms (A13); Wikipedia pool = FLatS's original background type (A13), 50,000 of the A6 MedRAG Wikipedia sample (90,692 of 3 shards, contents = 'title. content'), seeded, same size as the P9 MS MARCO pool. Retriever settings from the P4 config (= A0): queries get the query prefix, documents none; deterministic length batches"
+  },
+  "k": 10,
+  "dose": {
+    "n_sample": 12000,
+    "R": 5,
+    "fracs": [
+      0,
+      0.005,
+      0.01,
+      0.02,
+      0.05,
+      0.1,
+      0.2,
+      0.4
+    ],
+    "rules": [
+      "near",
+      "near_other",
+      "gen",
+      "hub",
+      "rand"
+    ],
+    "n_gen": 500,
+    "se_m": 4,
+    "_source": "our choice (JOURNAL 2026-10-07 14:52). Per KB and draw (O plays no role; ID-only): a 12,000-document sample of the P9 MS MARCO pool (= the A2 / A9 m = 4 size; seed A12_ms, KB, draw). For rule r with document score z_r: remove the fraction f of the sample with the largest z_r and top up with documents outside the sample whose z_r is below the smallest removed z_r, in the order of the draw's fixed pool permutation (common random numbers; removed documents are nested in f, top-ups are not). near: z = max cosine to the KB's 500 calibration queries (A9 rule); gen: z = max cosine to 500 MS MARCO bank queries drawn per (KB, draw) (same operation, KB-unrelated reference queries); hub: z = mean cosine to all 20,000 MS MARCO bank queries (generic-query centrality); rand: z uniform random. Reference sets: se_far = 4 StackExchange banks in the KB's far tag band (d > q_far; if fewer than 4, the 4 farthest, flagged), se_any = 4 random sites other than the KB; c = pooled top-10 mean over the 4 banks (exact from the per-bank top-10 lists)",
+    "_near_other": "review 2026-10-07 (before the run): near_other = the near operation (max cosine to 500 calibration queries) with the calibration queries of one KB-far StackExchange site per draw (drawn from the se_far pool, seed A12_nother): same query type and platform, unrelated topic. gen / hub barely move c (smoke) and are weak placebos. The deciding contrast is near vs near_other vs rand at a matched dose (delta mean c)"
+  },
+  "factor": "A10 definition: g = first principal component of the correlation matrix of the KB calibration queries' top-10-mean similarities to the left-out banks (MS arms: every bank except the KB; SE reference sets: also excluding the set's 4 banks); standardisation and weights from the KB calibration queries; sign: positive weight sum",
+  "measures": "on the KB's 1,000 test queries (out of sample: the near rule uses the calibration queries): rho(s, c), rho(s, g), rho(c, g), partial rho(s, c | g), sd(c)/sd(s), mean c, and the arm's mean near / hub document score; s = s_KB (top-10 mean cosine in the KB bank), c = top-10 mean cosine to the arm. KB means with a KB bootstrap 95% interval. No pass criterion",
+  "bootstrap_B": 2000
+}

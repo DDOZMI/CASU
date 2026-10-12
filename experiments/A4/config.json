@@ -1,0 +1,50 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "a0_processed": "data/processed/A0",
+    "a0_emb": "data/emb/A0",
+    "a1_emb": "data/emb/A1",
+    "a1_results": "experiments/A1/results",
+    "a2_emb": "data/emb/A2",
+    "emb": "data/emb/A4",
+    "results": "experiments/A4/results"
+  },
+  "detector": "bge-m3",
+  "k": 10,
+  "levels": {
+    "names": [
+      "L0",
+      "L1",
+      "L2",
+      "L3"
+    ],
+    "_source": "plan rev3 A4: the 4th slot of the A1 comparison set (same 3 fixed members per A1 draw, paired with A1) is replaced by a KB-overlap level: L0 = category != KB and far band (d > q_far) to KB; L1 = same category, middle band (q_nb < d <= q_far); L2 = same category, neighbour band (d <= q_nb); L3 = the KB site's own extra 3,000 documents (A0 role l3, disjoint from bank and queries). Our choices: the level site is drawn at random within its band per draw (seeded); candidates exclude KB, O, the fixed members and sites in O's neighbour band (A1 lesson: a KB-near slot that is also O-near mixes gain and cost); if L2 (or L1) is empty the nearest (median-rank) same-category site is used and flagged (plan rev3 A4 fallback by rank)",
+    "_fallback": "per draw (review 2026-10-06: plan A4 words it per KB): a band is empty either for the KB or after excluding O's neighbour band; then L2 = nearest same-category candidate, L1 = median-rank same-category candidate (flag level_fallback); draws with no same-category candidate have no L1/L2 (counted in the summary)",
+    "_estimands": "primary (plan): level curve and L1/L2/L3 - L0 in d'. Co-reported (review 2026-10-06, fixed before the run): O-distance-adjusted level costs from a regression of d' on level dummies + the slot's tag rank to O with (KB, O, draw) fixed effects (L3 slot = the KB site itself); two-sided clean draws (L0 and the level site both in O's far band); costs by tier with and without fallback draws. Levels also differ in proximity to O (L2 closer to O than L0 in ~72% of draws), so the unadjusted curve mixes the overlap cost with the RQ3 gain"
+  },
+  "scores": {
+    "tau_grid": [
+      0.005,
+      0.01,
+      0.02,
+      0.05,
+      0.1,
+      "inf"
+    ],
+    "alpha_grid": [
+      0.1,
+      0.2,
+      0.5,
+      1,
+      2
+    ],
+    "_source": "plan sec.2 (same as A1)"
+  },
+  "metrics": {
+    "ceiling": 0.98,
+    "id_accept": 0.95,
+    "bootstrap_B": 2000,
+    "dprime_clip": 0.0001,
+    "_source": "analysis rev3 sec.5 (same as A1)"
+  }
+}

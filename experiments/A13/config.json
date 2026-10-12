@@ -1,0 +1,121 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "a0_emb": "data/emb/A0",
+    "a0_processed": "data/processed/A0",
+    "a12_emb": "data/emb/A12",
+    "p9_emb": "data/emb/P9",
+    "results": "experiments/A13/results"
+  },
+  "runs": {
+    "main_bge-m3": {
+      "retriever": "bge-m3",
+      "emb": "data/emb/A1/bge-m3",
+      "a1": "experiments/A1/results",
+      "a2": "experiments/A2/results"
+    },
+    "a5_bge-m3": {
+      "retriever": "bge-m3",
+      "emb": "data/emb/A5/bge-m3",
+      "a1": "experiments/A5/results/bge-m3",
+      "a2": "experiments/A5/results_a2/bge-m3"
+    },
+    "a5_contriever-msmarco": {
+      "retriever": "contriever-msmarco",
+      "emb": "data/emb/A5/contriever-msmarco",
+      "a1": "experiments/A5/results/contriever-msmarco",
+      "a2": "experiments/A5/results_a2/contriever-msmarco"
+    },
+    "a5_qwen3-emb-0.6b": {
+      "retriever": "qwen3-emb-0.6b",
+      "emb": "data/emb/A5/qwen3-emb-0.6b",
+      "a1": "experiments/A5/results/qwen3-emb-0.6b",
+      "a2": "experiments/A5/results_a2/qwen3-emb-0.6b"
+    }
+  },
+  "k": 10,
+  "m": 4,
+  "cap": 3000,
+  "R": 5,
+  "alphas": [
+    0.1,
+    0.2,
+    0.5,
+    1,
+    2
+  ],
+  "moment_alphas": [
+    0.5,
+    1
+  ],
+  "li": {
+    "k": 32,
+    "tau": 1.0,
+    "_source": "Li et al. EMNLP 2024 statistics as implemented in A6 (li_stats): MSS = max, KNN = k-th, AvgKNN = top-k mean, Energy = tau log sum_topk exp(s/tau) (tau = 1), Entropy of softmax(top-k); k = 32 as Li; cosine (project convention; equals inner product for the normalised bge-m3 and Qwen3, not for contriever-msmarco). ID-ness = the negated OoK statistic"
+  },
+  "kbpca": {
+    "m": 15,
+    "knn_k": 10,
+    "_source": "Triantafyllopoulos et al. ACL 2026 sec.3.1: PCA on the KB's document embeddings, top-m PCs by explained variance (EVR; m = 15 their optimum), queries projected e' = e PC_m^T. Their detectors use ID and OOD labelled training queries (eps-ball / cube / rect majority vote, 'no neighbour -> OOD'; LogReg / SVM / GMM). ID-only variants (our choice): kbpca_q = -(10th-NN Euclidean distance to the KB's 500 calibration queries in the subspace; a calibration query excludes itself), kbpca_d = -(10th-NN distance to the KB's 3,000 bank documents in the subspace). Their supervised LogReg on the subspace goes to the upper-bound group (tri_sup)",
+    "_diag": "diagnostics (review 2026-10-07): knn_cal_full = the kbpca_q rule in the full embedding space; kbpca_res = -(norm of the query outside the 15-PC subspace, uncentred projection). They show whether the projection or the kNN rule drives kbpca_q"
+  },
+  "gauss": {
+    "_source": "our choice: Gaussian of the KB bank documents (3,000) and of the background sample (12,000 MS MARCO or Wikipedia), Ledoit-Wolf shrinkage (sklearn formula, GPU; checked against sklearn in the smoke); maha_kb = -Mahalanobis to the KB Gaussian; rmd_<bg> = -(Maha_KB - Maha_bg): RMD-type with an external background (review 2026-10-07: Ren et al.'s MD_0 is fit to the ID training data, which with one ID class equals the KB Gaussian; with an external background this is a Gaussian likelihood ratio against an auxiliary corpus)"
+  },
+  "qnorm": {
+    "_source": "our choice, both definitions (user left the choice open, JOURNAL 14:52): qz_ms: r(q) = top-10 mean cosine of q to the 20,000 MS MARCO bank queries (A12 msq); S = s_KB - beta r with beta the OLS slope of s_KB on r over the KB's calibration queries (ID only; removes the part of s_KB explained by query genericity, no comparison documents); qz_kb: per-query z of s_KB within the query's own cosine distribution over the 3,000 KB bank documents, (s_KB - mean)/sd (NQC-like; no external data)"
+  },
+  "background": {
+    "_bg_run": "our choice (cost, 2026-10-07 smoke: per-cell Gaussian / classifier fits would take ~5 h): RMD background Gaussians and clf_ms negatives use a run-level sample of 12,000 per draw d (seed A13_bg, background, d; independent of KB and O), so 5 Gaussians per background and 5 clf_ms fits per KB; the mix / mixk rows keep the per-cell samples below",
+    "_source": "FLatS-type pooled background (A1/A2 definitions): mix@a = s_KB - a * top-10 mean cosine to the sample, mixk@a = absk - a * 10th cosine (Lin & Gu eq. 5 form), a in alphas. MS MARCO: exactly A2's sample (seed A2_ms, first 12,000; AUROC checked against A2 rows); Wikipedia (FLatS's background type): 12,000 of the A12 Wikipedia pool (seed A13_wiki, KB, O, draw)",
+    "_wiki": "MedRAG Wikipedia (wiki20220301en), 3 shards, chunked: 50k pool covers 19,836 articles, 31% of chunks from 1,000 articles (review 2026-10-07); less diverse than MS MARCO passages"
+  },
+  "clf": {
+    "C": 1.0,
+    "max_iter": 100,
+    "_max_iter": "100 (smoke 2026-10-07: AUROC identical at 50 / 100 / 300 for a clf and an oracle fit)",
+    "_source": "our choice: competing supervised method, logistic regression KB bank documents (label 1) vs comparison documents (label 0), class_weight balanced, C = 1 (sklearn default), sklearn's objective solved by LBFGS on GPU (checked against sklearn in the smoke), raw unit embeddings (no scaler: the fit is on documents and applied to queries; query-document position gap acknowledged); ID-ness = decision value of the query. Comparison documents: clf_ms = the run-level MS MARCO sample of the draw (background._bg_run; fit per KB and draw), clf_se = the A2 random 4-site set (sets.csv first m sites; same documents as the A2 site / pooled rows)"
+  },
+  "oracle": {
+    "folds": 5,
+    "C_grid": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0
+    ],
+    "max_iter": 200,
+    "_source": "upper bounds (use the out-of-scope labels): oracle = logistic regression on standardised query embeddings, KB test (ID) vs O test (OOD), 5-fold stratified out-of-fold decision; tri_sup = the same on the KBPCA 15-dim projection (Triantafyllopoulos's supervised LogReg). Review 2026-10-07: C = 1 overfits (near pairs below tri_sup), so the bound is the max over the C grid of the out-of-fold AUROC (optimistic by construction; per-C rows kept). All (fold, C) problems solved jointly by one LBFGS (independent objectives summed). AUROC only (no calibrated operating point)",
+    "_grid": "1e-4 added before the run: in a check pair (ell vs english, bge-m3) the best C was the grid edge 1e-3"
+  },
+  "trisup": {
+    "k_pcs": 200,
+    "m_grid": [5, 10, 15, 25, 50, 75, 100, 150, 200],
+    "C_grid": [0.0001, 0.001, 0.01, 0.1, 1.0],
+    "rules": ["evr", "pval"],
+    "inner_folds": 5,
+    "max_iter": 200,
+    "C_literal": 1.0,
+    "_source": "06_trisup.py (added 2026-10-10, second mock review): the supervised KB-subspace gate in the protocol of Triantafyllopoulos et al. ACL 2026 (sec. 3.1, 4.2; Tables 1, 7, 8): top-200 PCs of the KB documents, m selected by EVR (top-m) or by the t-test ranking of ID vs OOD training projections, ML models tune m (their LogReg keeps ~125-140 PCs), OOD class = an equal number of queries pooled from the other domains. Our choices (flagged): logistic regression only (they also report SVM, GMM); training ID = the KB's 500 calibration queries, training OOD = 500 calibration queries drawn uniformly from all other sites of the run (O's at its natural share); features standardised per fit; (rule, m, C) chosen by 5-fold inner CV on the training set (tri_sup_cv, Table 2) - a departure from the paper, whose ML models tune m only, and one that favours this baseline; the paper-literal variants tri_sup_evr_c1 / tri_sup_pval_c1 (C fixed at C_literal = sklearn's default 1.0, m by inner CV, each rule separately as their Tables 1 and 7) and the test-max envelope (tri_sup_max) are kept for the appendix; one gate per KB (negatives and inner folds seeded by the KB); ties broken by the first maximum in (rule, m, C) order, so m = 200 ties go to evr (rule-agnostic there); m grid and C grid fixed before the run (C grid = the oracle grid). Their reported 0.951 is accuracy (Table 7), not AUROC"
+  },
+  "metrics": {
+    "op_accept": 0.95,
+    "ceiling": 0.98,
+    "dprime_clip": 0.0001,
+    "bootstrap_B": 2000,
+    "_source": "as A1 / A2: AUROC (OOD score = -S), d' change vs abs, G on A_abs <= 0.98, operating point = threshold accepting 95% of the KB calibration queries (realised ID / OOD acceptance on test), FPR at 95% ID test (oracle threshold); KB x O two-way bootstrap"
+  },
+  "ours": {
+    "_source": "rows taken from existing outputs (not recomputed): A1 / A5 rows.parquet S_tau at tau 0.01 and inf for roles O (level i), N1+N2 (level ii, neighbour present), Z1+Z2 (level iii, neutral); A2 / A5_A2 rows.parquet m = 4 site S_tau (random 4-site set). Common cell set = A1 cells"
+  },
+  "flats_alphas": [
+    0.5,
+    1
+  ],
+  "_flats": "review 2026-10-07: faithful FLatS row (Lin & Gu eq. 5): S = -d_k(x; KB bank) + a d_k(x; background), d_k = Euclidean distance to the k-th (k = 10) nearest unit vector = sqrt(2 - 2 cos_k); a in {0.5 (FLatS default, the pre-specified comparison point), 1}. FLatS's D_ID is in-distribution training samples; here the KB documents (the KB gate has no ID queries at deployment)",
+  "comparison_alpha": {
+    "value": 0.5,
+    "_source": "our choice before the run (review 2026-10-07): the pre-specified comparison point for every FLatS-type row is a = 0.5 (FLatS default and their selected value); other a are a sweep, and any max over a is post-hoc"
+  }
+}

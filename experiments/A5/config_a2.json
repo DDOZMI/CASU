@@ -1,0 +1,83 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "a0_processed": "data/processed/A0",
+    "a0_emb": "data/emb/A0",
+    "a1_emb": "data/emb/A5",
+    "a1_results": "experiments/A5/results/bge-m3",
+    "p9_emb": "data/emb/P9",
+    "p9_processed": "data/processed/P9",
+    "emb": "data/emb/A5_A2",
+    "results": "experiments/A5/results_a2"
+  },
+  "detector": "bge-m3",
+  "cross_encoder": "contriever-msmarco",
+  "k": 10,
+  "sets": {
+    "m_grid": [
+      4
+    ],
+    "R": 5,
+    "_source": "plan rev3 A2: comparison sites drawn at random among all sites except KB and O, R = 5 draws per A1 pair; nested in m (the first m sites of one seeded order), so every m uses the same draw (our choice)"
+  },
+  "partitions": {
+    "names": [
+      "site",
+      "tag",
+      "cross",
+      "same",
+      "random"
+    ],
+    "kmeans_iters": 15,
+    "_source": "plan rev3 A2: same m x 3,000 documents split into m groups of exactly 3,000: site (curated), tag clusters (balanced spherical k-means on the set's own tag TF-IDF, sparse; main cluster type; review 2026-10-06 replaced a global SVD-128 that kept <1% of the tag energy for half of the documents), cross-embedding clusters (contriever-msmarco embeddings; detector bge-m3), same-embedding clusters (bge-m3; reference for circularity), random equal split. Balanced k-means = k-means++ init (seeded), capacity-constrained greedy assignment in rounds, 15 iterations (our choices)",
+    "_purity": "per (pair, draw, m, partition): mean over groups of the majority-site share (review 2026-10-06: embedding clusters nearly reproduce sites on this test bed)"
+  },
+  "general": {
+    "pool": "MS MARCO 50k (P9 pool)",
+    "conditions": [
+      "pooled",
+      "random",
+      "cross"
+    ],
+    "_source": "plan rev3 A2: general corpus with a different style, same size m x 3,000 (seeded sample of the 50k P9 pool per draw): pooled background, random split, cross-embedding (contriever) clusters"
+  },
+  "scores": {
+    "tau_grid": [
+      0.005,
+      0.01,
+      0.02,
+      0.05,
+      0.1,
+      "inf"
+    ],
+    "alpha_grid": [
+      0.1,
+      0.2,
+      0.5,
+      1,
+      2
+    ],
+    "_source": "plan sec.2 (same as A1)"
+  },
+  "metrics": {
+    "ceiling": 0.98,
+    "id_accept": 0.95,
+    "bootstrap_B": 2000,
+    "dprime_clip": 0.0001,
+    "_source": "analysis rev3 sec.5 (same as A1)"
+  },
+  "results_per_retriever": true,
+  "retrievers": [
+    "bge-m3",
+    "contriever-msmarco",
+    "qwen3-emb-0.6b"
+  ],
+  "cross_encoder_by_detector": {
+    "bge-m3": "contriever-msmarco",
+    "contriever-msmarco": "qwen3-emb-0.6b",
+    "qwen3-emb-0.6b": "bge-m3"
+  },
+  "_a5_source": "plan rev3 A5: A2 at m = 4 on the 30-site subset for the three models; pairs = the A5 subset pairs (870, identical across models; experiments/A5/results/bge-m3/tables/pairs.csv); comparison sites drawn within the subset; cross-embedding clusters use the next model in the rotation bge-m3 -> contriever -> Qwen3 -> bge-m3 (the detector's own embedding is the 'same' partition); MS MARCO pool embeddings from P9 for all three",
+  "cluster_bootstrap": "subset_triples",
+  "_cluster_source": "as the A5 A1 part (review 2026-10-06): the subset is 10 tag-nearest triples; triple-level two-way bootstrap reported next to the site-level interval"
+}

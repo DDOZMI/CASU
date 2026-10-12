@@ -1,0 +1,81 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "a0_emb": "data/emb/A0",
+    "a0_items": "data/processed/A0/items.parquet",
+    "a0_processed": "data/processed/A0",
+    "a8_processed": "data/processed/A8",
+    "p4_queries": "data/processed/P4/queries.parquet",
+    "p9_emb": "data/emb/P9",
+    "results": "experiments/A16/results/a10"
+  },
+  "runs": {
+    "a16_bge-m3": {
+      "retriever": "bge-m3",
+      "emb": "data/emb/A16/a1/bge-m3",
+      "a1": "experiments/A16/results",
+      "doc": false,
+      "queries": "a0",
+      "items": "data/processed/A16/items.parquet",
+      "ms_only": true,
+      "q_emb": "data/emb/A16/bge-m3"
+    },
+    "a16_contriever-msmarco": {
+      "retriever": "contriever-msmarco",
+      "emb": "data/emb/A16/a1/contriever-msmarco",
+      "a1": "experiments/A16/results_models/contriever-msmarco",
+      "doc": false,
+      "queries": "a0",
+      "items": "data/processed/A16/items.parquet",
+      "ms_only": true,
+      "q_emb": "data/emb/A16/contriever-msmarco"
+    },
+    "a16_qwen3-emb-0.6b": {
+      "retriever": "qwen3-emb-0.6b",
+      "emb": "data/emb/A16/a1/qwen3-emb-0.6b",
+      "a1": "experiments/A16/results_models/qwen3-emb-0.6b",
+      "doc": false,
+      "queries": "a0",
+      "items": "data/processed/A16/items.parquet",
+      "ms_only": true,
+      "q_emb": "data/emb/A16/qwen3-emb-0.6b"
+    }
+  },
+  "k": 10,
+  "m": 4,
+  "cap": 3000,
+  "mmax_a2": 8,
+  "R": 5,
+  "taus": [
+    "0.01",
+    "inf"
+  ],
+  "alphas": [
+    0.5,
+    1
+  ],
+  "dprime_clip": 0.0001,
+  "a9_p": 0.5,
+  "bootstrap_B": 2000,
+  "_source": "A10 structural closure (user 2026-10-07 'B, A, C, D 순으로'; plan and forecasts JOURNAL 2026-10-07 13:03). Collection reproduces existing comparison sets exactly (A1/A5/A8 draws.csv slots; A2/A5 sets.csv first m sites; A2 random split seed A2_rand; A2 MS sample seed A2_ms (first 12,000 of the 24,000 permutation prefix); A9 filtered arm (common threshold recomputed as in A9 pass 1, rng A9_arms first draw); A4 levels.csv + topk_l3) and checks the recomputed AUROCs against the stored ones. Constants are our choices.",
+  "factor": {
+    "_source": "our choice: g = first principal component of the correlation matrix of the KB calibration queries' top-10-mean similarities to the left-out banks (all banks except KB, O and the comparison set's own banks; for A8 only A0 sites, excluding the twins of KB and O); standardisation and weights from the KB calibration queries only (ID), applied to ID and OOD test queries; sign: positive weight sum"
+  },
+  "length": "log(1 + number of whitespace tokens) of the query title",
+  "d_peak": {
+    "pi_min_abs": 0.02,
+    "bins": [
+      0,
+      1,
+      1.5,
+      2,
+      2.5,
+      3,
+      4,
+      "inf"
+    ],
+    "_source": "our choice (review 2026-10-07): variance-only model-implied dA_var = Phi(d_abs(1+pi)/sqrt2) - Phi(d_abs/sqrt2) per cell; per d_abs bin the ratio of means sum(dA_var)/sum(pi) vs the curve phi(d/sqrt2) d/sqrt2; cells with |pi| <= pi_min_abs dropped and counted"
+  },
+  "clip_flag": "a row is at the clip if its AUROC or the abs AUROC is >= 1 - dprime_clip (as A1 at_clip); R_shape shares are reported with and without such rows",
+  "_a16_source": "A16: one run on the Amazon build; a1 slot moments with the stored-AUROC check on; msunf rows via the ms_only option (A2 MS sample rule, P9 MS MARCO pool, seed key A2_ms); constants unchanged from A10. Results in results/a10 (review 2026-10-08: A1 02 and A10 02 both write meta_02.json)."
+}

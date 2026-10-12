@@ -1,0 +1,81 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "a0_processed": "data/processed/A16",
+    "a0_emb": "data/emb/A16",
+    "emb": "data/emb/A16/a1",
+    "results": "experiments/A16/results_nbcat"
+  },
+  "detector": "bge-m3",
+  "second_distance_encoder": {
+    "bge-m3": "contriever-msmarco",
+    "contriever-msmarco": "qwen3-emb-0.6b",
+    "qwen3-emb-0.6b": "bge-m3"
+  },
+  "k": 10,
+  "pairs": {
+    "rank_strata": [
+      [
+        1,
+        6
+      ],
+      [
+        7,
+        23
+      ],
+      [
+        24,
+        66
+      ]
+    ],
+    "per_stratum": 4,
+    "_source": "plan rev3 A1, our choice: per KB 12 out-of-scope sites, 4 from each KB tag-distance rank stratum (near 1-6, middle 7-30, far 31-85 (86 sites after excluding rus)); ranks instead of thresholds because tag-JS saturates (P19) | A16: strata rescaled to the site count (see _a16_source)"
+  },
+  "comparison": {
+    "m": 4,
+    "R": 5,
+    "fixed_rule": "far band (d > q_far) to both O and KB, category != category(O)",
+    "slots": [
+      "O",
+      "N1",
+      "N2",
+      "M",
+      "Z1",
+      "Z2",
+      "Zm",
+      "K",
+      "NK"
+    ],
+    "_source": "plan rev3 A1: m = 4, R = 5; slot roles O (leak), N1/N2 (two nearest eligible to O outside KB's neighbour band), M (median rank to O), Z1/Z2 (random, far band to both), Zm (sensitivity, user decision 2026-10-06: far band to O, KB-distance rank closest to N1's), K (nearest eligible to KB outside O's neighbour band and not N1/N2), NK (min rank_O + rank_KB among eligible not already used). Eligible = not KB, not O, not a fixed member"
+  },
+  "scores": {
+    "tau_grid": [
+      0.005,
+      0.01,
+      0.02,
+      0.05,
+      0.1,
+      "inf"
+    ],
+    "alpha_grid": [
+      0.1,
+      0.2,
+      0.5,
+      1,
+      2
+    ],
+    "_source": "plan sec.2 (D6 tau sweep; FLatS alpha grid); cosine top-10 mean (abs, S_tau, mix) and 10th-NN (absk, mixk)"
+  },
+  "metrics": {
+    "ceiling": 0.98,
+    "id_accept": 0.95,
+    "bootstrap_B": 2000,
+    "_source": "analysis rev3 sec.5: d' primary (all pairs), G secondary on A_abs <= 0.98; operating point = threshold accepting 95% of the KB calibration queries; two-way (KB x O) bootstrap",
+    "dprime_clip": 0.0001,
+    "_dprime_clip_source": "our choice (as P19): AUROC clipped to [1e-4, 1 - 1e-4] before Phi^-1"
+  },
+  "distance_file": "copurchase_js.csv",
+  "ood_cat_keep": [],
+  "_a16_source": "A16 (experiments/A16/PLAN.md; user '진행해' 2026-10-08): A1 rules unchanged on the Amazon build; distance = co-purchase profile JS (data/processed/A16/copurchase_js.csv), category = top-level node, SE category strata not applicable (ood_cat_keep = []); rank strata rescaled to the site count n: near 1-6 as A1, mid 7-round((n-1) * 30 / 85), far the rest; after the review rebuild n = 67: mid 7-23, far 24-66 (rule fixed before any A16 result). Review 2026-10-08 (user '수정해서 진행해'): KB / O neighbour band without the category condition (primary, nb_same_category = false); the A1 rule is the sensitivity config_a1_nbcat.json (results_nbcat). Tree-distance regression: A1 03 rerun on the same rows with distance_file = tree_dist.csv (config_a1_tree.json, results_tree; read the raw-distance rows).",
+  "nb_same_category": true
+}

@@ -1,0 +1,61 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "a0_processed": "data/processed/A0",
+    "results": "experiments/A3/results_diag"
+  },
+  "runs": {
+    "main_bge-m3": {
+      "emb": "data/emb/A1/bge-m3",
+      "a1": "experiments/A1/results",
+      "a2": "experiments/A2/results"
+    },
+    "a5_bge-m3": {
+      "emb": "data/emb/A5/bge-m3",
+      "a1": "experiments/A5/results/bge-m3",
+      "a2": "experiments/A5/results_a2/bge-m3"
+    },
+    "a5_contriever-msmarco": {
+      "emb": "data/emb/A5/contriever-msmarco",
+      "a1": "experiments/A5/results/contriever-msmarco",
+      "a2": "experiments/A5/results_a2/contriever-msmarco"
+    },
+    "a5_qwen3-emb-0.6b": {
+      "emb": "data/emb/A5/qwen3-emb-0.6b",
+      "a1": "experiments/A5/results/qwen3-emb-0.6b",
+      "a2": "experiments/A5/results_a2/qwen3-emb-0.6b"
+    }
+  },
+  "m": 4,
+  "taus": [
+    "0.01",
+    "inf"
+  ],
+  "dprime_clip": 0.0001,
+  "a2_outcomes": [
+    "site@0.01",
+    "site@inf",
+    "mix@1",
+    "mix@0.5"
+  ],
+  "a1_contrasts": [
+    "main",
+    "matched"
+  ],
+  "_source": "post hoc RQ1 diagnosis (user 2026-10-06 'RQ1 반대 방향의 원인을 진단해보자'), after the A3 / A5 results. Outcomes = the A3 primary outcomes (A2 m = 4: site S_tau@0.01, @inf, pooled mix@1, mix@0.5) and the A1 RQ3 contrasts (main = (ii) - (iii), matched = N1 - Zm). Same runs as A3 (main bge-m3, 86 sites) and A3/A5 (30-site subset, 3 models). Slope model = the A3 interval of record (imported from A3/01_rq1.py), predictor = KB-O tag-distance rank (per 1 SD). Constants: our choices",
+  "scales": {
+    "list": [
+      "ddp",
+      "dA",
+      "dOP",
+      "logratio"
+    ],
+    "_source": "D1 scale dependence (our choice): ddp = d'(rel) - d'(abs) with d' = sqrt(2) Phi^-1(clip(AUROC)) (the A1-A3 gain metric); dA = AUROC(rel) - AUROC(abs); dOP = OOD acceptance(abs) - OOD acceptance(rel) at the calibrated threshold (95% of KB calibration queries; positive = fewer OOD accepted = gain); logratio = log(d'(rel) / d'(abs)) per draw when both d' > 0 (multiplicative gain; draws with d' <= 0 dropped and counted). For the A1 contrasts: differences of the same quantities between the (ii) slots (mean of N1, N2) or N1 and the (iii) slots (mean of Z1, Z2) or Zm"
+  },
+  "decomposition": {
+    "_source": "D2 (our choice; A5 05_offdiag extended; review 2026-10-06 applied): binormal moment identity on test queries. Dmu = mean_ID - mean_OOD, sbar = sqrt((var_ID + var_OOD)/2): d_abs = Dmu_s/sbar_abs, d_rel = (Dmu_s - Dmu_c)/sbar_rel; d_rel - d_abs = T_var + T_push with the order-symmetric midpoint split T_push = -Dmu_c (1/sbar_abs + 1/sbar_rel)/2, T_var = (Dmu_s - Dmu_c/2)(1/sbar_rel - 1/sbar_abs); pi = sbar_abs/sbar_rel - 1 and d_abs reported as components (T_var is not simply proportional to d_abs: pi varies by cell). RQ3 contrast X vs Y (same fixed members; mean over slot pairs): B = Dmu_s - Dmu_c, h = (1/sbar_X + 1/sbar_Y)/2; variance part (B_X + B_Y)/2 (1/sbar_X - 1/sbar_Y), ID-side cost -(mu_c,X^ID - mu_c,Y^ID) h, OOD-side push (mu_c,X^OOD - mu_c,Y^OOD) h; every piece invariant to the cosine origin. Fidelity: Spearman and means of moment vs AUROC-based ddp, slope of resid = ddp - moment",
+    "profile": "D3 competing distance (diagnostic; uses OOD test queries): correlation over the banks other than KB and O of the KB and O test queries' mean similarities; slope of T_push with it as a covariate. Read as an embedding-space KB-O distance competing with the tag rank, not as a mechanism (review 2026-10-06)"
+  },
+  "predictions": "recorded in JOURNAL 2026-10-06 before the run",
+  "model": "as A3: y ~ x + (1|KB) + (1|O) + (0+x|KB) + (0+x|O), REML, Wald 95% (statsmodels MixedLM, variance components); x = rank standardised"
+}

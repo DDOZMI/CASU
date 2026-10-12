@@ -1,0 +1,60 @@
+{
+  "seed": 20261008,
+  "paths": {
+    "amazon_raw": "data/raw/amazon_qa",
+    "inventory": "data/processed/A16",
+    "processed": "data/processed/A16",
+    "emb": "data/emb/A16",
+    "models": "/home/gomgom/projects/LLM",
+    "p4_config": "experiments/P4/config.json",
+    "results": "experiments/A16/results"
+  },
+  "sites": {
+    "min_questions_single_path": 4500,
+    "split_depth3_if_children_at_least": 2,
+    "_source": "user decision 2026-10-08 (mixed cut, JOURNAL 14:32 ff.): depth-2 nodes (top > 2nd level) with >= 4,500 questions of single-path products; a node whose depth-3 children include >= 2 nodes meeting the same bar is replaced by those children (the parent's other products are dropped). Products with more than one category path are excluded (1.5%). Site category = top-level node (analogue of the SE category)."
+  },
+  "split": {
+    "n_test": 1000,
+    "n_cal": 500,
+    "n_bank": 3000,
+    "max_q_per_query_product": 5,
+    "_source": "D1 (user '진행해' 2026-10-08, recommended option): SE sizes (A0 test 1,000 / cal 500 / bank 3,000); product-level split (query products and bank products disjoint); at most 5 questions per query product (our choice: within-product clustering). Sites that cannot fill the sizes after deduplication are dropped and listed."
+  },
+  "dedup": {
+    "_source": "user decision 2026-10-08: within a site, keep the first question per normalised question text (lower case, punctuation stripped, whitespace collapsed; A0 used lower case + whitespace only). Across sites (review 2026-10-08, user '수정해서 진행해'; replaces the earlier test-informed rule): every normalised question that occurs in two or more candidate sites is removed from all sites before the query / bank split, so no query text can occur in any bank or as another site's query and no bank is curated with test queries."
+  },
+  "text": {
+    "_source": "D2 (user 2026-10-08, recommended): query = question; bank document = question + ' ' + answer; the product title is not used. Questions with an empty question or answer are dropped before deduplication (queries too; our choice, keeps one candidate pool for both roles)."
+  },
+  "distance": {
+    "profile_depth": 3,
+    "q_neighbor": 0.1,
+    "q_far": 0.5,
+    "_source": "D3 (user 2026-10-08, recommended): co-purchase profile of a site = distribution over depth-3 category nodes (paths shorter than 3: the full path) of the also_bought targets of the site's non-query products (targets mapped through all 17 metadata files; a target with several paths spreads unit weight equally over its distinct nodes; unmapped targets dropped and counted); Jensen-Shannon distance sqrt(JSD), log base 2 (as A0 tag-JS). Bands: the same quantile levels as A0 (q10 neighbour, q50 far) over all site pairs. KB neighbour band for the A1 slot rules (review 2026-10-08, user): primary = d <= q10 without the category condition (36% of q10 pairs cross top-level nodes, so the A1 same-category condition would leave strong KB neighbours in the N slots); sensitivity = the A1 rule (same top-level node and d <= q10). Tree distance (sensitivity): 1 = same depth-2 parent (siblings from a split), 2 = same top-level node, 3 = different top-level node. Profiles are summed in sorted order (bit-stable). Diagnostic (review 2026-10-08): the same JS with unmapped targets kept as one pseudo-node (copurchase_js_unmapped.csv), compared by rank agreement only."
+  },
+  "subset": {
+    "_source": "no A5-style subset in A16 (bge-m3 first, user 2026-10-08); empty subset.json written for the A0 encoder script"
+  },
+  "encode": {
+    "main": {
+      "bge-m3": [
+        "test",
+        "cal",
+        "bank"
+      ],
+      "contriever-msmarco": [
+        "test",
+        "cal",
+        "bank"
+      ],
+      "qwen3-emb-0.6b": [
+        "test",
+        "cal",
+        "bank"
+      ]
+    },
+    "subset": {},
+    "_source": "A16 model generality (user 2026-10-08 '모델 마저 다 돌려'): all three retrievers encode test / cal / bank of all sites (bge-m3 unchanged: same fingerprint, skipped). Encoding-only config, so config.json (the build config, guarded by its sha) is not touched."
+  }
+}

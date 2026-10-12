@@ -1,0 +1,87 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "a0_processed": "data/processed/A0",
+    "a0_emb": "data/emb/A0",
+    "emb": "data/emb/A5",
+    "results": "experiments/A5/results"
+  },
+  "detector": "bge-m3",
+  "second_distance_encoder": {
+    "bge-m3": "contriever-msmarco",
+    "contriever-msmarco": "qwen3-emb-0.6b",
+    "qwen3-emb-0.6b": "bge-m3"
+  },
+  "k": 10,
+  "pairs": {
+    "mode": "all",
+    "tier_ranks": [
+      [
+        1,
+        2
+      ],
+      [
+        3,
+        10
+      ],
+      [
+        11,
+        29
+      ]
+    ],
+    "_source": "plan rev3 A5, our choice: within the 30-site subset (10 tag-nearest triples) every other subset site is an O (30 x 29 = 870 pairs); tier from the O's tag-distance rank to KB among the 29: near 1-2 (mostly the KB's own triple), mid 3-10, far 11-29. All other rules (bands, fixed members, slots, scores, metrics) identical to A1; comparison sites are restricted to the subset because Qwen3 banks exist only there"
+  },
+  "comparison": {
+    "m": 4,
+    "R": 5,
+    "fixed_rule": "far band (d > q_far) to both O and KB, category != category(O)",
+    "slots": [
+      "O",
+      "N1",
+      "N2",
+      "M",
+      "Z1",
+      "Z2",
+      "Zm",
+      "K",
+      "NK"
+    ],
+    "_source": "plan rev3 A1: m = 4, R = 5; slot roles O (leak), N1/N2 (two nearest eligible to O outside KB's neighbour band), M (median rank to O), Z1/Z2 (random, far band to both), Zm (sensitivity, user decision 2026-10-06: far band to O, KB-distance rank closest to N1's), K (nearest eligible to KB outside O's neighbour band and not N1/N2), NK (min rank_O + rank_KB among eligible not already used). Eligible = not KB, not O, not a fixed member"
+  },
+  "scores": {
+    "tau_grid": [
+      0.005,
+      0.01,
+      0.02,
+      0.05,
+      0.1,
+      "inf"
+    ],
+    "alpha_grid": [
+      0.1,
+      0.2,
+      0.5,
+      1,
+      2
+    ],
+    "_source": "plan sec.2 (D6 tau sweep; FLatS alpha grid); cosine top-10 mean (abs, S_tau, mix) and 10th-NN (absk, mixk)"
+  },
+  "metrics": {
+    "ceiling": 0.98,
+    "id_accept": 0.95,
+    "bootstrap_B": 2000,
+    "_source": "analysis rev3 sec.5: d' primary (all pairs), G secondary on A_abs <= 0.98; operating point = threshold accepting 95% of the KB calibration queries; two-way (KB x O) bootstrap",
+    "dprime_clip": 0.0001,
+    "_dprime_clip_source": "our choice (as P19): AUROC clipped to [1e-4, 1 - 1e-4] before Phi^-1"
+  },
+  "site_set": "subset",
+  "results_per_retriever": true,
+  "retrievers": [
+    "bge-m3",
+    "contriever-msmarco",
+    "qwen3-emb-0.6b"
+  ],
+  "_a5_source": "A5 (generality): A1 rerun on the subset for bge-m3, contriever-msmarco and Qwen3 (same sites, same planning for all three); sign agreement of the key results is read across the three (analysis rev3 sec.3)",
+  "cluster_bootstrap": "subset_triples",
+  "_cluster_source": "A5 review 2026-10-06: the subset is 10 tag-nearest triples, so sites are not independent; a two-way triple-level bootstrap (KB-triples x O-triples) is reported as a sensitivity next to the site-level two-way interval"
+}

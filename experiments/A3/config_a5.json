@@ -1,0 +1,60 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "a0_processed": "data/processed/A0",
+    "results": "experiments/A3/results_a5"
+  },
+  "runs": {
+    "a5_bge-m3": {
+      "sites": "data/emb/A5/bge-m3/sites.json",
+      "a1": "experiments/A5/results/bge-m3",
+      "a2": "experiments/A5/results_a2/bge-m3"
+    },
+    "a5_contriever-msmarco": {
+      "sites": "data/emb/A5/contriever-msmarco/sites.json",
+      "a1": "experiments/A5/results/contriever-msmarco",
+      "a2": "experiments/A5/results_a2/contriever-msmarco"
+    },
+    "a5_qwen3-emb-0.6b": {
+      "sites": "data/emb/A5/qwen3-emb-0.6b/sites.json",
+      "a1": "experiments/A5/results/qwen3-emb-0.6b",
+      "a2": "experiments/A5/results_a2/qwen3-emb-0.6b"
+    }
+  },
+  "m": 4,
+  "outcomes": {
+    "primary": [
+      "a2:val:site@0.01",
+      "a2:val:site@inf",
+      "a2:val:se_mix@1",
+      "a2:val:se_mix@0.5"
+    ],
+    "secondary": [
+      "a1:N_ddp@S_tau@0.01",
+      "a1:off_ddp@S_tau@0.01",
+      "a1:main_ddp@S_tau@0.01",
+      "a1:matched_ddp@S_tau@0.01",
+      "a1:N_ddp@S_tau@inf",
+      "a1:off_ddp@S_tau@inf",
+      "a1:main_ddp@S_tau@inf",
+      "a1:matched_ddp@S_tau@inf"
+    ],
+    "_source": "plan rev3 A3 (fixed before the A3 run, 2026-10-06): A2 outputs at m = 4, curated (site partition S_tau at 0.01 and inf) and pooled background (mix@1, mix@0.5), as d' vs abs; secondary: A1 (ii) = mean d'(N1, N2), (iii) - abs = mean d'(Z1, Z2), (ii) - (iii), at tau 0.01 and inf; G (A_abs <= 0.98) for the primary A2 outcomes as a further secondary; review 2026-10-06: A1 KB-matched N1 - Zm added (plan A1: used with the tiers and RQ1); A1 secondary outcomes are not blind (A1 tier tables already seen), A2 primary outcomes are",
+    "_neither": "sensitivity (review 2026-10-06): the four A2 primary outcomes recomputed on draws whose m = 4 comparison set has neither an O-neighbour nor a KB-neighbour (removes the distance-dependent neighbour composition of random sets)"
+  },
+  "predictors": {
+    "main": "rank",
+    "all": [
+      "rank",
+      "tag",
+      "samecat"
+    ],
+    "_source": "analysis rev3 RQ1: external KB-O distance = category and tag-distance rank (raw tag-JS as sensitivity). rank = tag-JS rank of O among the KB's other sites (1 = nearest), standardised; tag = raw tag-JS, standardised; samecat = same category (0/1)"
+  },
+  "model": "interval of record (fixed before the run, review 2026-10-06): y ~ x + (1|KB) + (1|O) + (0+x|KB) + (0+x|O), independent crossed random intercepts and slopes, REML, Wald 95% interval of the fixed slope (statsmodels MixedLM, variance components). Reference: random intercepts only; robustness: OLS slope with a two-way (KB x O) bootstrap. Ceiling sensitivities for the primary outcomes: cells with A_abs <= ceiling only, and probit(A_abs) as a covariate (changes the estimand; difficulty may mediate distance)",
+  "bootstrap_B": 2000,
+  "ceiling": 0.98,
+  "reading_rule": "analysis rev3 RQ1 + completion (fixed before the run): slope < 0 on rank/tag (> 0 on samecat) with the interval excluding 0 = near gains more; interval including 0 = no distance interaction (refutation); slope > 0 on rank/tag with the interval excluding 0 = near gains less (opposite of the RQ1 hypothesis). Each outcome is read separately; when the primary outcomes disagree, no single 'RQ1 sign' is reported. Main predictor: rank. samecat overlaps with rank and is not read as an independent factor",
+  "runs_note": "A5 subset runs (config_a5.json) rank O within the 30-site subset (1-29), so per-SD slopes are not comparable in size with the main run; signs are",
+  "_a5_source": "plan rev3 A5: A3 on the 30-site subset for the three models (A5 A1 part and A5 A2 part outputs); same outcomes, predictors, model and reading rule as the main A3; rank within the subset (1-29)"
+}

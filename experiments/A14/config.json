@@ -1,0 +1,32 @@
+{
+  "seed": 20261006,
+  "paths": {
+    "a0_processed": "data/processed/A0",
+    "a13_results": "experiments/A13/results",
+    "results": "experiments/A14/results"
+  },
+  "runs": {
+    "main_bge-m3": {"emb": "data/emb/A1/bge-m3", "a1": "experiments/A1/results", "m_grid": [4, 8, 16, 32, "all"]},
+    "a5_bge-m3": {"emb": "data/emb/A5/bge-m3", "a1": "experiments/A5/results/bge-m3", "m_grid": [4, 8, 16, "all"]},
+    "a5_contriever-msmarco": {"emb": "data/emb/A5/contriever-msmarco", "a1": "experiments/A5/results/contriever-msmarco", "m_grid": [4, 8, 16, "all"]},
+    "a5_qwen3-emb-0.6b": {"emb": "data/emb/A5/qwen3-emb-0.6b", "a1": "experiments/A5/results/qwen3-emb-0.6b", "m_grid": [4, 8, 16, "all"]}
+  },
+  "k": 10,
+  "R": 5,
+  "exclusion": {
+    "quantile": 0.9,
+    "_source": "user D2 2026-10-07 20:14 (fixed before the run): site crowd c(KB, j) = mean over the KB's 500 calibration queries of the top-10 mean cosine to site j's bank (ID-only); one common threshold per run = the 0.9 quantile of c(KB, j) over all KB != j pairs of the run; a site is KB-adjacent (excluded for that KB) if c(KB, j) >= threshold. 0.9 = the pre-fixed tag neighbour quantile q = 0.1 (D7)"
+  },
+  "bank": {
+    "_source": "user 2026-10-07 20:05 / D3 20:14: comparison bank = StackExchange sites other than the KB and O (O's bank is never in the deployable condition: its presence would measure 'already holding the test source', JOURNAL 20:14). Arms: excl (KB-adjacent sites removed) and noexcl. For m < all: the first m sites of one seeded permutation of the eligible sites per (KB, O, draw) (seed A14_order); the excl arm uses the same permutation with excluded sites skipped (paired, nested in m); m = all is deterministic (computed once per pair). Our choices: m grid per run (main 4..32 + all; A5 4..16 + all), R = 5"
+  },
+  "scores": {
+    "taus": ["0.01", "inf"],
+    "alpha": 0.5,
+    "_source": "S_tau = s_KB - tau log mean_j exp(s_j / tau) over the bank's site logits (top-10 mean cosine per site); tau = 0.01 = the user's 'small tau' arm, tau = inf the average-aggregation contrast; pooled FLatS-type on the same documents: mix@0.5 = s_KB - 0.5 * pooled top-10 mean cosine, flatsp@0.5 = -d10(x; KB) + 0.5 d10(x; pooled bank) (FLatS eq. 5 form; exact from the per-site top-10 lists)"
+  },
+  "reference": "flats_ms@0.5 (A13 cellsG; FLatS eq. 5, MS MARCO background, a = 0.5; the pre-specified existing-method reference)",
+  "primary": "user prediction (JOURNAL 20:05): arm excl, S_tau@0.01, m = all beats flats_ms@0.5 in G, the difference concentrated in near pairs. Read with the moment decomposition (T_push = neighbour coverage vs T_var = same-platform covariance) and the moderator. No pass criterion",
+  "moderator": "per (cell, arm, m, draw): nn_rank = the rank (by tag JS distance to O, among the sites other than O and the KB = the eligible universe; review 2026-10-07: ranking among all sites but O put the KB in O's top 3 in 35% of near pairs) of the bank's site nearest to O; nn_rank_all = the same among all sites but O (secondary); nn_d = its tag JS distance; covered = nn_rank <= 3. Bins for the report: nn_rank 1 / 2-3 / 4-10 / 11+, binned per draw (per-draw G_ref = (A_draw - A_ref)/(1 - A_abs))",
+  "metrics": {"op_accept": 0.95, "ceiling": 0.98, "bootstrap_B": 2000, "dprime_clip": 0.0001}
+}
